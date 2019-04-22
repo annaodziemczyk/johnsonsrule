@@ -149,14 +149,11 @@ class Schedule:
         enddate2 = None
         numColors = len(self.schedule)
         colors = self.cmocean_to_plotly(cmocean.cm.haline, numColors)
-
-        print("\n\n>>>>>>>>>>>>>>>>>> JOB ORDER <<<<<<<<<<<<<<<<<<<<<<<<<\n\n")
-
+        jobOrder= []
 
         while self.schedule:
             job = heapq.heappop(self.schedule)
-            #print the order of the jobs procecessed according to Johnson's Rule
-            print(job.name + " > ", end='')
+            jobOrder.append(job.name)
 
             #create items for the gantt chart in the order specified
             job1 = self.machine1.jobs.get(job.name)
@@ -177,13 +174,20 @@ class Schedule:
                            Finish=enddate2.strftime('%Y-%m-%d %H:%M:%S'), Resource=jobLabel, Description=jobLabel))
             startdate1 = enddate1
 
+
+        #print the order of the jobs procecessed according to Johnson's Rule
+        print("\n\n>>>>>>>>>>>>>>>>>> JOB ORDER <<<<<<<<<<<<<<<<<<<<<<<<<\n\n")
+        print(">".join(jobOrder), end='')
+        makespan = (enddate2 if enddate2 > enddate1 else enddate1) - self.startDate
+        displayMakespan = self.displayMakeSpan(makespan)
+        print(displayMakespan)
+
         #generate gantt chart
-        fig = ff.create_gantt(df, title='Gantt Chart for Johnson\'s Rule', colors=colors, index_col='Resource', height=900,
+        fig = ff.create_gantt(df, title='Gantt Chart for Johnson\'s Rule' + ' <br>(' + ">".join(jobOrder) + " - " + displayMakespan + ')', colors=colors, index_col='Resource', height=900,
                               show_colorbar=True, group_tasks=True, showgrid_x=True, showgrid_y=True)
         py.offline.plot(fig, filename='johnsons-rule-gantt-chart.html')
 
-        makespan = (enddate2 if enddate2 > enddate1 else enddate1) - self.startDate
-        self.displayMakeSpan(makespan)
+
         print("\n\nGantt chart has been generated to an html file in project dir. \nA web browser should open automatically. \nYou may need to allow bocked conent in IE to see the chart.\n\n")
 
     #calculate the end date for a single job based on the specified time unit
@@ -202,19 +206,20 @@ class Schedule:
             return startdate + datetime.timedelta(executiontime*365)
 
     def displayMakeSpan(self, delta):
-        print("MAKESPAN: ", end=' ')
+        makespan = "\nMakespan: "
         if self.timeUnit == TimeUnit.SECOND:
-            print(delta.days*24*60*60 + delta.seconds, end=' ')
+            makespan += str(round(delta.days*24*60*60 + delta.seconds))
         elif self.timeUnit == TimeUnit.MINUTE:
-            print(round(delta.days*24*60 + delta.seconds/60), end=' ')
+            makespan += str(round(delta.days*24*60 + delta.seconds/60))
         elif self.timeUnit == TimeUnit.HOUR:
-            print(round(delta.days*24 + delta.seconds/3600), end=' ')
+            makespan += str(round(delta.days*24 + delta.seconds/3600))
         elif self.timeUnit == TimeUnit.DAY:
-            print(delta.days, end=' ')
+            makespan += str(delta.days)
         elif self.timeUnit == TimeUnit.MONTH:
-            print(round(delta.days/365*12), end=' ')
+            makespan += str(round(delta.days/365*12))
         elif self.timeUnit == TimeUnit.YEAR:
-            print(round(delta.days/365), end=' ')
+            makespan += str(round(delta.days/365))
+        return makespan
 
     #source https://plot.ly/python/cmocean-colorscales/
     #generates colors for the gantt chart
@@ -237,7 +242,7 @@ if __name__ == "__main__":
     ]
 
     #specify the time units and start date for the gantt chart
-    schedule = Schedule(datetime.datetime.now(), TimeUnit.MONTH)
+    schedule = Schedule(datetime.datetime.now(), TimeUnit.DAY)
 
     #initialzie jobs for both machines
     for jobCount in range(1, len(jobExecutionTimes[0]) + 1):
