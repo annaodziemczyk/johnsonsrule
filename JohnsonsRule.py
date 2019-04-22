@@ -145,6 +145,8 @@ class Schedule:
         df = []
         startdate1 = self.startDate
         startdate2 = None
+        enddate1 = None
+        enddate2 = None
         numColors = len(self.schedule)
         colors = self.cmocean_to_plotly(cmocean.cm.haline, numColors)
 
@@ -180,22 +182,40 @@ class Schedule:
                               show_colorbar=True, group_tasks=True, showgrid_x=True, showgrid_y=True)
         py.offline.plot(fig, filename='johnsons-rule-gantt-chart.html')
 
+        makespan = (enddate2 if enddate2 > enddate1 else enddate1) - self.startDate
+        self.displayMakeSpan(makespan)
         print("\n\nGantt chart has been generated to an html file in project dir. \nA web browser should open automatically. \nYou may need to allow bocked conent in IE to see the chart.\n\n")
 
     #calculate the end date for a single job based on the specified time unit
     def calculateEndDate(self, startdate, executiontime):
         if self.timeUnit == TimeUnit.SECOND:
             return startdate + datetime.timedelta(seconds=executiontime)
-        if self.timeUnit == TimeUnit.MINUTE:
+        elif self.timeUnit == TimeUnit.MINUTE:
             return startdate + datetime.timedelta(minutes=executiontime)
-        if self.timeUnit == TimeUnit.HOUR:
+        elif self.timeUnit == TimeUnit.HOUR:
             return startdate + datetime.timedelta(hours=executiontime)
-        if self.timeUnit == TimeUnit.DAY:
+        elif self.timeUnit == TimeUnit.DAY:
             return startdate + datetime.timedelta(days=executiontime)
         elif self.timeUnit == TimeUnit.MONTH:
             return startdate + datetime.timedelta(executiontime*365/12)
         elif self.timeUnit == TimeUnit.YEAR:
             return startdate + datetime.timedelta(executiontime*365)
+
+    def displayMakeSpan(self, delta):
+        print("MAKESPAN: ", end=' ')
+        if self.timeUnit == TimeUnit.SECOND:
+            print(delta.seconds, end=' ')
+        elif self.timeUnit == TimeUnit.MINUTE:
+            print(round(delta.seconds/60), end=' ')
+        elif self.timeUnit == TimeUnit.HOUR:
+            print(round(delta.seconds/3600), end=' ')
+        elif self.timeUnit == TimeUnit.DAY:
+            print(delta.days, end=' ')
+        elif self.timeUnit == TimeUnit.MONTH:
+            print(round(delta.days/365*12), end=' ')
+        elif self.timeUnit == TimeUnit.YEAR:
+            print(round(delta.days/365), end=' ')
+        print(self.timeUnit.name + "S")
 
     #source https://plot.ly/python/cmocean-colorscales/
     #generates colors for the gantt chart
