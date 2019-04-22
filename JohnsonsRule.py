@@ -204,18 +204,17 @@ class Schedule:
     def displayMakeSpan(self, delta):
         print("MAKESPAN: ", end=' ')
         if self.timeUnit == TimeUnit.SECOND:
-            print(delta.seconds, end=' ')
+            print(delta.days*24*60*60 + delta.seconds, end=' ')
         elif self.timeUnit == TimeUnit.MINUTE:
-            print(round(delta.seconds/60), end=' ')
+            print(round(delta.days*24*60 + delta.seconds/60), end=' ')
         elif self.timeUnit == TimeUnit.HOUR:
-            print(round(delta.seconds/3600), end=' ')
+            print(round(delta.days*24 + delta.seconds/3600), end=' ')
         elif self.timeUnit == TimeUnit.DAY:
             print(delta.days, end=' ')
         elif self.timeUnit == TimeUnit.MONTH:
             print(round(delta.days/365*12), end=' ')
         elif self.timeUnit == TimeUnit.YEAR:
             print(round(delta.days/365), end=' ')
-        print(self.timeUnit.name + "S")
 
     #source https://plot.ly/python/cmocean-colorscales/
     #generates colors for the gantt chart
@@ -238,7 +237,7 @@ if __name__ == "__main__":
     ]
 
     #specify the time units and start date for the gantt chart
-    schedule = Schedule(datetime.datetime.now(), TimeUnit.DAY)
+    schedule = Schedule(datetime.datetime.now(), TimeUnit.MONTH)
 
     #initialzie jobs for both machines
     for jobCount in range(1, len(jobExecutionTimes[0]) + 1):
